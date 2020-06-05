@@ -13,9 +13,7 @@
       "**/@types/testing-library__react"
     ]
   },
-  "resolutions": {
-    "graphql-tools": "^5.0.0"
-  },
+  "resolutions": {},
   "scripts": {
     "install:clean": "rm -rf node_modules yarn.lock packages/server/node_modules packages/server/yarn.lock packages/client/node_modules packages/client/yarn.lock && yarn",
     "client": "yarn workspace client start",
