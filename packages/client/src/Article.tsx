@@ -1,17 +1,28 @@
 import React from 'react';
 import { useQuery, gql } from '@apollo/client';
 import { useParams } from 'react-router-dom';
+import Comments from './Comments';
 
 function Article() {
   let { id } = useParams();
   const {data} = useQuery(gql`
-    query getArticle($id: String!) {
+    query getArticle($id: ID!, $last: Int = 3, $before: ID) {
       article(id: $id) {
         id
         title
-        author {
-          id
-          name
+        comments(last: $last, before: $before) {
+          count
+          pageInfo {
+            startCursor
+            hasPreviousPage
+          }
+          edges {
+            cursor
+            node {
+              id
+              content
+            }
+          }
         }
       }
     }
@@ -22,7 +33,7 @@ function Article() {
   return (
     <>
       {data.article.title && <div>Title: {data.article.title}</div>}
-      {data.article.author && <div>Author: {data.article.author.name}</div>}
+      {data.article.comments && <Comments articleId={id} />}
     </>
   );
 }

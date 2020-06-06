@@ -29,6 +29,26 @@ const client = new ApolloClient({
                 }))
             );
           },
+          comments(
+            existingDataFromCache: Reference | undefined,
+            {args, toReference, readField},
+          ) {
+            if (!existingDataFromCache && args && args.articleId && args.last) {
+              const {articleId, last, before} = args;
+              const articleRef = toReference({
+                __typename: 'Article',
+                id: articleId,
+              });
+              if (articleRef) {
+                return readField({
+                  fieldName: 'comments',
+                  args: {last, before},
+                  from: articleRef,
+                });
+              }
+            }
+            return existingDataFromCache;
+          },
         },
       },
     },
