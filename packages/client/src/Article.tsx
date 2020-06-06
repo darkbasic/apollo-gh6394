@@ -32,8 +32,9 @@ function Article() {
   });
   return (
     <>
-      {data.article.title && <div>Title: {data.article.title}</div>}
-      {data.article.comments && <Comments articleId={id} />}
+      {data?.article?.title && <div>Title: {data.article.title}</div>}
+      {data?.article?.comments && <div>Loaded comments: {data.article.comments.edges?.length ?? 0}</div>}
+      {data?.article?.comments && <Comments articleId={id} />}
     </>
   );
 }

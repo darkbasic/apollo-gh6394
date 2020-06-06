@@ -1,5 +1,5 @@
 import React from 'react';
-import { useQuery, gql, useMutation, Reference } from '@apollo/client';
+import { useQuery, gql, useMutation, Reference, useApolloClient } from '@apollo/client';
 import { Modifier } from '@apollo/client/cache/core/types/common';
 import AddComment from './AddComment';
 
@@ -34,6 +34,7 @@ function Comments({articleId}: any) {
   const {data, fetchMore} = useQuery(getCommentsQuery, {
     variables: {articleId},
   });
+  const apollo = useApolloClient();
 
   const getMoreComments = () => {
     if (data?.comments.pageInfo.hasPreviousPage) {
@@ -42,8 +43,38 @@ function Comments({articleId}: any) {
           articleId,
           before: data.comments.pageInfo.startCursor,
         } as any, // Otherwise Apollo won't let me add the optional before arg, typings are wrong
-        updateQuery: (prev, {fetchMoreResult}) =>
-          fetchMoreResult
+        updateQuery: (prev, {fetchMoreResult}) => {
+          //updateQuery will update the messages query, but since the messages query is fed by the
+          //article(id: ID!) query we will need to update it as well
+          //Note that we don't even have access to the cache object, so we're forced to use the useApolloClient hook
+          apollo.cache.modify({
+            id: apollo.cache.identify({
+              __typename: 'Article',
+              id: articleId,
+            }),
+            fields: {
+              comments(connection: {pageInfo: any; edges: Array<{node: Reference}>}, {toReference}) {
+                const olderEdge = fetchMoreResult.comments.edges[fetchMoreResult.comments.edges.length - 1];
+                return {
+                  ...connection,
+                  pageInfo: {
+                    ...connection.pageInfo,
+                    startCursor: olderEdge.node.id,
+                  },
+                  edges: connection.edges.concat(fetchMoreResult.comments.edges.map((edge: any) => ({
+                    ...edge,
+                    //The reference doesn't exist in the cache yet, but that's not a problem because it will be created
+                    //by updateQuery once it returns
+                    node: toReference({
+                      __typename: 'Comment',
+                      id: edge.node.id,
+                    }),
+                  }))),
+                };
+              },
+            },
+          });
+          return fetchMoreResult
             ? {
                 ...fetchMoreResult,
                 comments: {
@@ -53,7 +84,8 @@ function Comments({articleId}: any) {
                   ),
                 },
               }
-            : prev,
+            : prev;
+        }
       });
     }
   };

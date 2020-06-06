@@ -31,7 +31,7 @@ function AddComment({articleId}: any) {
         if (!newCommentRef) {
           throw new Error("Couldn't write fragment to cache");
         }
-        const handleComments: Modifier<{pageInfo: any; edges: Array<{node: Reference}>}> = (connection) => {
+        const handleComments: Modifier<{edges: Array<{node: Reference}>}> = (connection) => {
           if (
             connection.edges.some(
               ({node}) => node.__ref === newCommentRef.__ref,
@@ -41,10 +41,6 @@ function AddComment({articleId}: any) {
           }
           return {
             ...connection,
-            pageInfo: {
-              ...connection.pageInfo,
-              startCursor: cursor,
-            },
             edges: [
               {
                 __typename: 'CommentEdge',

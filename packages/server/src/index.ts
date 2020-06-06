@@ -39,7 +39,7 @@ const paginatedComments = ({articleId, last, before}: {articleId: number; last: 
   const count = articleComments.length;
   const cursorIndex = before ? articleComments.findIndex(({id: commentId}) => commentId === before) : undefined;
   const beforeCount = articleComments.slice(0, cursorIndex ?? count).length;
-  const lastComments = articleComments.slice(Math.max(count - last - (cursorIndex ?? 0), 0), cursorIndex ?? count);
+  const lastComments = articleComments.slice(Math.max((cursorIndex ?? count - 1) - last, 0), cursorIndex ?? count);
   return {
     count,
     edges: lastComments.map(comment => ({
